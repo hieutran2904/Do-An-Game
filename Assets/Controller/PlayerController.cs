@@ -7,6 +7,10 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
     private CharacterController _controller;
+    private Animator _animator;
+    //private bool isJumping;
+    //private bool isGrounded;
+
 
     [SerializeField]
     private float _playerSpeed = 5f;
@@ -43,7 +47,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 hitDir;
 
     private void Start()
-    {
+    {   _animator = GetComponent<Animator>();
         _controller = GetComponent<CharacterController>();
         scoreText.text = score.ToString() + " Gift";
     }
@@ -57,7 +61,7 @@ public class PlayerController : MonoBehaviour
     void Movement()
     {
         _groundedPlayer = _controller.isGrounded;
-        if (_groundedPlayer && _playerVelocity.y < 0.5)
+        if (_groundedPlayer && _playerVelocity.y <= 0)
         {
             _playerVelocity.y = 0f;
         }
@@ -72,15 +76,26 @@ public class PlayerController : MonoBehaviour
 
         if (movementDirection != Vector3.zero)
         {
+            _animator.SetBool("IsMoving", true);
             Quaternion desiredRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
 
             transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, _rotationSpeed * Time.deltaTime);
         }
+        else
+        {
+            _animator.SetBool("IsMoving", false);
+        }
+
 
         if (Input.GetButtonDown("Jump") && _groundedPlayer)
         {
             _playerVelocity.y += Mathf.Sqrt(_jumpHeight * -3.0f * _gravityValue);
+            _animator.SetBool("IsJumping", true);
             //Debug.Log("enter jump");
+        }
+        else
+        {
+            _animator.SetBool("IsJumping", false);
         }
 
         _playerVelocity.y += _gravityValue * Time.deltaTime;
@@ -151,7 +166,13 @@ public class PlayerController : MonoBehaviour
 
         if (collision.gameObject.CompareTag("PlaneOver")) //tính s? ?i?m khi game over
         {
-            GameOver.Setup(score);
+            GameOver.Setup(score, "GAME OVER");
+            txtScore.SetActive(false);
+
+        }
+        if (collision.gameObject.CompareTag("PlaneWin")) //ve dich
+        {
+            GameOver.Setup(score, "WIN GAME");
             txtScore.SetActive(false);
         }
 
